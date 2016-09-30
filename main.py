@@ -7,7 +7,6 @@ Tetris Party Deluxe war 20x10 blöcke groß; Alles über 21 ist gameover
 
 """
 
-
 pygame.init()
 #Farben in RGB
 black = (0, 0, 0)
@@ -33,6 +32,8 @@ posy = [1028, 978, 928, 878, 828, 778, 728, 678, 628, 578, 528, 478, 428, 378, 3
 #-----------------#Window Options#-----------------
 window_size = (1910, 1080)  #1920, 1080
 window = pygame.display.set_mode((window_size), pygame.FULLSCREEN)
+#ScreenInfo = pygame.display.Info()
+#pygame.display.set_mode((ScreenInfo.current_w, ScreenInfo.current_h))
 pygame.display.set_caption("Tetris Party remake")
 #pygame.display.set_icon(pygame.image.load("./assets/images/icon.png"))
 clock = pygame.time.Clock()
