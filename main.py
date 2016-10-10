@@ -28,7 +28,7 @@ dark_cyan=(0,150,150)
 
 #-----------------#Position Array#------------------------
 posx=[462,512, 562, 612, 662, 712, 762, 812, 862, 912]# 0 Left; 9 Right
-posy = [1032, 982, 932, 882, 832, 782, 732, 682, 632, 582, 532, 482, 432, 382, 332, 282, 232, 182, 132, 82, 32, -22, -72, -122, -172] #19 top; 1 bottom
+posy = [1032, 982, 932, 882, 832, 782, 732, 682, 632, 582, 532, 482, 432, 382, 332, 282, 232, 182, 132, 82, 32, -18, -68, -118, -168] #19 top; 0 bottom
 #-----------------#Window Options#-----------------
 ScreenInfo = pygame.display.Info()
 window_size2 = ((ScreenInfo.current_w, ScreenInfo.current_h))
@@ -47,7 +47,7 @@ class grid():
         #if grid.gridCount == 1:
         self.x = 500 #Breite des Spielbereiches Block = 50 breit
         self.y = 1000 # Höhe des Spielbereiches Block = 50 Hoch
-        self.grid = []
+        #self.Blockarray = [(False, color=None, x = None, y = None)]
         grid.gridCount += 1 #falls 2 spieler drinnen sein wird
     def Grid(self):
         pygame.draw.rect(window, white, [(window_size[0]/2-self.x), (window_size[1]-self.y), self.x, self.y], 2)
@@ -56,8 +56,11 @@ class grid():
 #Default Spawn Position should be x = 4; y = 22
 defaultx = 4
 defaulty = 19
+#For Oriantation
+Compas = ["N", "E", "S", "W"]
 class o_piece():
     def __init__(self):
+        self.CompasCount = 0
         self.width = 50
         self.height = 50
         self.x = defaultx
@@ -82,9 +85,7 @@ class o_piece():
 class I_piece():
     def __init__(self):
         #Still Testing how to rotate blocks the easy way
-        Compas = ["N", "E", "S", "W"]
         self.CompasCount = 0
-        #self.CompasState = Compas[self.CompasCount]
         self.width = 50
         self.height = 50
         self.x = defaultx
@@ -97,14 +98,14 @@ class I_piece():
             pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y],self.width, self.height)) # Outer_Box
             pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
             #3rd Level
-            pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y-1],self.width, self.height)) # Outer_Box
-            pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y-1]+6,self.width-12,self.height-12)) # Inner_Box
+            pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y+1],self.width, self.height)) # Outer_Box
+            pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y+1]+6,self.width-12,self.height-12)) # Inner_Box
             #2nd Level
-            pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y-2],self.width, self.height)) # Outer_Box
-            pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y-2]+6,self.width-12,self.height-12)) # Inner_Box
+            pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y+2],self.width, self.height)) # Outer_Box
+            pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y+2]+6,self.width-12,self.height-12)) # Inner_Box
             #1st Level
-            pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y-3],self.width, self.height)) # Outer_Box
-            pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y-3]+6,self.width-12,self.height-12)) # Inner_Box
+            pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y+3],self.width, self.height)) # Outer_Box
+            pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y+3]+6,self.width-12,self.height-12)) # Inner_Box
         def East():
             #Top
             pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y],self.width, self.height)) # Outer_Box
@@ -155,6 +156,7 @@ class I_piece():
 
 class L_piece():
     def __init__(self):
+        self.CompasCount = 0
         self.width = 50
         self.height = 50
         self.x = defaultx
@@ -162,21 +164,70 @@ class L_piece():
         self.light_color = orange
         self.dark_color = dark_orange
     def Draw(self):
-        #Top Left
-        pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y],self.width, self.height)) # Outer_Box
-        pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
-        #Mid Left
-        pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y-1],self.width, self.height)) # Outer_Box
-        pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y-1]+6,self.width-12,self.height-12)) # Inner_Box
-        #Low Left
-        pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y-2],self.width, self.height)) # Outer_Box
-        pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y-2]+6,self.width-12,self.height-12)) # Inner_Box
-        #Low Right
-        pygame.draw.rect(window, self.dark_color,(posx[self.x+1], posy[self.y-2],self.width, self.height)) # Outer_Box
-        pygame.draw.rect(window, self.light_color,(posx[self.x+1]+6,posy[self.y-2]+6,self.width-12,self.height-12)) # Inner_Box
+        def North():
+            #Top Left
+            pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y+2],self.width, self.height)) # Outer_Box
+            pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y+2]+6,self.width-12,self.height-12)) # Inner_Box
+            #Mid Left
+            pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y+1],self.width, self.height)) # Outer_Box
+            pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y+1]+6,self.width-12,self.height-12)) # Inner_Box
+            #Low Left == Rotation Center
+            pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y],self.width, self.height)) # Outer_Box
+            pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+            #Low Right
+            pygame.draw.rect(window, self.dark_color,(posx[self.x+1], posy[self.y],self.width, self.height)) # Outer_Box
+            pygame.draw.rect(window, self.light_color,(posx[self.x+1]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+        def East():
+            #Top Left
+            pygame.draw.rect(window, self.dark_color,(posx[self.x+2], posy[self.y],self.width, self.height)) # Outer_Box
+            pygame.draw.rect(window, self.light_color,(posx[self.x+2]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+            #Mid Left
+            pygame.draw.rect(window, self.dark_color,(posx[self.x+1], posy[self.y],self.width, self.height)) # Outer_Box
+            pygame.draw.rect(window, self.light_color,(posx[self.x+1]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+            #Low Left == Rotation Center
+            pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y],self.width, self.height)) # Outer_Box
+            pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+            #Low Right
+            pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y-1],self.width, self.height)) # Outer_Box
+            pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y-1]+6,self.width-12,self.height-12)) # Inner_Box
+        def South():
+            #Top Left
+            pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y-2],self.width, self.height)) # Outer_Box
+            pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y-2]+6,self.width-12,self.height-12)) # Inner_Box
+            #Mid Left
+            pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y-1],self.width, self.height)) # Outer_Box
+            pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y-1]+6,self.width-12,self.height-12)) # Inner_Box
+            #Low Left == Rotation Center
+            pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y],self.width, self.height)) # Outer_Box
+            pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+            #Low Right
+            pygame.draw.rect(window, self.dark_color,(posx[self.x-1], posy[self.y],self.width, self.height)) # Outer_Box
+            pygame.draw.rect(window, self.light_color,(posx[self.x-1]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+        def West():
+            #Top Left
+            pygame.draw.rect(window, self.dark_color,(posx[self.x-2], posy[self.y],self.width, self.height)) # Outer_Box
+            pygame.draw.rect(window, self.light_color,(posx[self.x-2]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+            #Mid Left
+            pygame.draw.rect(window, self.dark_color,(posx[self.x-1], posy[self.y],self.width, self.height)) # Outer_Box
+            pygame.draw.rect(window, self.light_color,(posx[self.x-1]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+            #Low Left == Rotation Center
+            pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y],self.width, self.height)) # Outer_Box
+            pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+            #Low Right
+            pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y+1],self.width, self.height)) # Outer_Box
+            pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y+1]+6,self.width-12,self.height-12)) # Inner_Box
+        if self.CompasCount == 0:
+            North()
+        elif self.CompasCount == 1:
+            East()
+        elif self.CompasCount == 2:
+            South()
+        elif self.CompasCount == 3:
+            West()
 
 class J_piece():
     def __init__(self):
+        self.CompasCount = 0
         self.width = 50
         self.height = 50
         self.x = defaultx
@@ -184,21 +235,70 @@ class J_piece():
         self.light_color = blue
         self.dark_color = dark_blue
     def Draw(self):
-        #Top Right
-        pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y],self.width, self.height)) # Outer_Box
-        pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
-        #Mid Right
-        pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y-1],self.width, self.height)) # Outer_Box
-        pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y-1]+6,self.width-12,self.height-12)) # Inner_Box
-        #Low Right
-        pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y-2],self.width, self.height)) # Outer_Box
-        pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y-2]+6,self.width-12,self.height-12)) # Inner_Box
-        #Low Left
-        pygame.draw.rect(window, self.dark_color,(posx[self.x-1], posy[self.y-2],self.width, self.height)) # Outer_Box
-        pygame.draw.rect(window, self.light_color,(posx[self.x-1]+6,posy[self.y-2]+6,self.width-12,self.height-12)) # Inner_Box
+        def North():
+            #Top Right
+            pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y+2],self.width, self.height)) # Outer_Box
+            pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y+2]+6,self.width-12,self.height-12)) # Inner_Box
+            #Mid Right
+            pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y+1],self.width, self.height)) # Outer_Box
+            pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y+1]+6,self.width-12,self.height-12)) # Inner_Box
+            #Low Right == Rotation Center
+            pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y],self.width, self.height)) # Outer_Box
+            pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+            #Low Left
+            pygame.draw.rect(window, self.dark_color,(posx[self.x-1], posy[self.y],self.width, self.height)) # Outer_Box
+            pygame.draw.rect(window, self.light_color,(posx[self.x-1]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+        def East():
+            #Top Right
+            pygame.draw.rect(window, self.dark_color,(posx[self.x+2], posy[self.y],self.width, self.height)) # Outer_Box
+            pygame.draw.rect(window, self.light_color,(posx[self.x+2]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+            #Mid Right
+            pygame.draw.rect(window, self.dark_color,(posx[self.x+1], posy[self.y],self.width, self.height)) # Outer_Box
+            pygame.draw.rect(window, self.light_color,(posx[self.x+1]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+            #Low Right == Rotation Center
+            pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y],self.width, self.height)) # Outer_Box
+            pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+            #Low Left
+            pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y+1],self.width, self.height)) # Outer_Box
+            pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y+1]+6,self.width-12,self.height-12)) # Inner_Box
+        def South():
+            #Top Right
+            pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y-2],self.width, self.height)) # Outer_Box
+            pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y-2]+6,self.width-12,self.height-12)) # Inner_Box
+            #Mid Right
+            pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y-1],self.width, self.height)) # Outer_Box
+            pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y-1]+6,self.width-12,self.height-12)) # Inner_Box
+            #Low Right == Rotation Center
+            pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y],self.width, self.height)) # Outer_Box
+            pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+            #Low Left
+            pygame.draw.rect(window, self.dark_color,(posx[self.x+1], posy[self.y],self.width, self.height)) # Outer_Box
+            pygame.draw.rect(window, self.light_color,(posx[self.x+1]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+        def West():
+            #Top Right
+            pygame.draw.rect(window, self.dark_color,(posx[self.x-2], posy[self.y],self.width, self.height)) # Outer_Box
+            pygame.draw.rect(window, self.light_color,(posx[self.x-2]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+            #Mid Right
+            pygame.draw.rect(window, self.dark_color,(posx[self.x-1], posy[self.y],self.width, self.height)) # Outer_Box
+            pygame.draw.rect(window, self.light_color,(posx[self.x-1]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+            #Low Right == Rotation Center
+            pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y],self.width, self.height)) # Outer_Box
+            pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+            #Low Left
+            pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y-1],self.width, self.height)) # Outer_Box
+            pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y-1]+6,self.width-12,self.height-12)) # Inner_Box
+        if self.CompasCount == 0:
+            North()
+        elif self.CompasCount == 1:
+            East()
+        elif self.CompasCount == 2:
+            South()
+        elif self.CompasCount == 3:
+            West()
 
 class S_piece():
     def __init__(self):
+        self.CompasCount = 0
         self.width = 50
         self.height = 50
         self.x = defaultx
@@ -206,21 +306,70 @@ class S_piece():
         self.light_color = green
         self.dark_color = dark_green
     def Draw(self):
-        #Top Right
-        pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y],self.width, self.height)) # Outer_Box
-        pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
-        #Top Mid
-        pygame.draw.rect(window, self.dark_color,(posx[self.x-1], posy[self.y],self.width, self.height)) # Outer_Box
-        pygame.draw.rect(window, self.light_color,(posx[self.x-1]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
-        #Low Mid
-        pygame.draw.rect(window, self.dark_color,(posx[self.x-1], posy[self.y-1],self.width, self.height)) # Outer_Box
-        pygame.draw.rect(window, self.light_color,(posx[self.x-1]+6,posy[self.y-1]+6,self.width-12,self.height-12)) # Inner_Box
-        #Low Left
-        pygame.draw.rect(window, self.dark_color,(posx[self.x-2], posy[self.y-1],self.width, self.height)) # Outer_Box
-        pygame.draw.rect(window, self.light_color,(posx[self.x-2]+6,posy[self.y-1]+6,self.width-12,self.height-12)) # Inner_Box
+        def North():
+            #Top Right
+            pygame.draw.rect(window, self.dark_color,(posx[self.x+1], posy[self.y],self.width, self.height)) # Outer_Box
+            pygame.draw.rect(window, self.light_color,(posx[self.x+1]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+            #Top Mid = Center
+            pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y],self.width, self.height)) # Outer_Box
+            pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+            #Low Mid
+            pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y-1],self.width, self.height)) # Outer_Box
+            pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y-1]+6,self.width-12,self.height-12)) # Inner_Box
+            #Low Left
+            pygame.draw.rect(window, self.dark_color,(posx[self.x-1], posy[self.y-1],self.width, self.height)) # Outer_Box
+            pygame.draw.rect(window, self.light_color,(posx[self.x-1]+6,posy[self.y-1]+6,self.width-12,self.height-12)) # Inner_Box
+        def East():
+            #Top Right
+            pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y-1],self.width, self.height)) # Outer_Box
+            pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y-1]+6,self.width-12,self.height-12)) # Inner_Box
+            #Top Mid = Center
+            pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y],self.width, self.height)) # Outer_Box
+            pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+            #Low Mid
+            pygame.draw.rect(window, self.dark_color,(posx[self.x-1], posy[self.y],self.width, self.height)) # Outer_Box
+            pygame.draw.rect(window, self.light_color,(posx[self.x-1]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+            #Low Left
+            pygame.draw.rect(window, self.dark_color,(posx[self.x-1], posy[self.y+1],self.width, self.height)) # Outer_Box
+            pygame.draw.rect(window, self.light_color,(posx[self.x-1]+6,posy[self.y+1]+6,self.width-12,self.height-12)) # Inner_Box
+        def South():
+            #Top Right
+            pygame.draw.rect(window, self.dark_color,(posx[self.x-1], posy[self.y],self.width, self.height)) # Outer_Box
+            pygame.draw.rect(window, self.light_color,(posx[self.x-1]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+            #Top Mid = Center
+            pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y],self.width, self.height)) # Outer_Box
+            pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+            #Low Mid
+            pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y+1],self.width, self.height)) # Outer_Box
+            pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y+1]+6,self.width-12,self.height-12)) # Inner_Box
+            #Low Left
+            pygame.draw.rect(window, self.dark_color,(posx[self.x+1], posy[self.y+1],self.width, self.height)) # Outer_Box
+            pygame.draw.rect(window, self.light_color,(posx[self.x+1]+6,posy[self.y+1]+6,self.width-12,self.height-12)) # Inner_Box
+        def West():
+            #Top Right
+            pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y-1],self.width, self.height)) # Outer_Box
+            pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y-1]+6,self.width-12,self.height-12)) # Inner_Box
+            #Top Mid = Center
+            pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y],self.width, self.height)) # Outer_Box
+            pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+            #Low Mid
+            pygame.draw.rect(window, self.dark_color,(posx[self.x-1], posy[self.y],self.width, self.height)) # Outer_Box
+            pygame.draw.rect(window, self.light_color,(posx[self.x-1]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+            #Low Left
+            pygame.draw.rect(window, self.dark_color,(posx[self.x-1], posy[self.y+1],self.width, self.height)) # Outer_Box
+            pygame.draw.rect(window, self.light_color,(posx[self.x-1]+6,posy[self.y+1]+6,self.width-12,self.height-12)) # Inner_Box
+        if self.CompasCount == 0:
+            North()
+        elif self.CompasCount == 1:
+            East()
+        elif self.CompasCount == 2:
+            South()
+        elif self.CompasCount == 3:
+            West()
 
 class Z_piece():
     def __init__(self):
+        self.CompasCount = 0
         self.width = 50
         self.height = 50
         self.x = defaultx
@@ -228,21 +377,70 @@ class Z_piece():
         self.light_color = red
         self.dark_color = dark_red
     def Draw(self):
-        #Top Left
-        pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y],self.width, self.height)) # Outer_Box
-        pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
-        #Top Mid
-        pygame.draw.rect(window, self.dark_color,(posx[self.x+1], posy[self.y],self.width, self.height)) # Outer_Box
-        pygame.draw.rect(window, self.light_color,(posx[self.x+1]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
-        #Low Mid
-        pygame.draw.rect(window, self.dark_color,(posx[self.x+1], posy[self.y-1],self.width, self.height)) # Outer_Box
-        pygame.draw.rect(window, self.light_color,(posx[self.x+1]+6,posy[self.y-1]+6,self.width-12,self.height-12)) # Inner_Box
-        #Low Right
-        pygame.draw.rect(window, self.dark_color,(posx[self.x+2], posy[self.y-1],self.width, self.height)) # Outer_Box
-        pygame.draw.rect(window, self.light_color,(posx[self.x+2]+6,posy[self.y-1]+6,self.width-12,self.height-12)) # Inner_Box
+        def North():
+            #Top Left
+            pygame.draw.rect(window, self.dark_color,(posx[self.x-1], posy[self.y],self.width, self.height)) # Outer_Box
+            pygame.draw.rect(window, self.light_color,(posx[self.x-1]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+            #Top Mid = Center
+            pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y],self.width, self.height)) # Outer_Box
+            pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+            #Low Mid
+            pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y-1],self.width, self.height)) # Outer_Box
+            pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y-1]+6,self.width-12,self.height-12)) # Inner_Box
+            #Low Right
+            pygame.draw.rect(window, self.dark_color,(posx[self.x+1], posy[self.y-1],self.width, self.height)) # Outer_Box
+            pygame.draw.rect(window, self.light_color,(posx[self.x+1]+6,posy[self.y-1]+6,self.width-12,self.height-12)) # Inner_Box
+        def East():
+            #Top Left
+            pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y+1],self.width, self.height)) # Outer_Box
+            pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y+1]+6,self.width-12,self.height-12)) # Inner_Box
+            #Top Mid = Center
+            pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y],self.width, self.height)) # Outer_Box
+            pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+            #Low Mid
+            pygame.draw.rect(window, self.dark_color,(posx[self.x-1], posy[self.y],self.width, self.height)) # Outer_Box
+            pygame.draw.rect(window, self.light_color,(posx[self.x-1]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+            #Low Left
+            pygame.draw.rect(window, self.dark_color,(posx[self.x-1], posy[self.y-1],self.width, self.height)) # Outer_Box
+            pygame.draw.rect(window, self.light_color,(posx[self.x-1]+6,posy[self.y-1]+6,self.width-12,self.height-12)) # Inner_Box
+        def South():
+            #Top Left
+            pygame.draw.rect(window, self.dark_color,(posx[self.x+1], posy[self.y],self.width, self.height)) # Outer_Box
+            pygame.draw.rect(window, self.light_color,(posx[self.x+1]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+            #Top Mid = Center
+            pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y],self.width, self.height)) # Outer_Box
+            pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+            #Low Mid
+            pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y+1],self.width, self.height)) # Outer_Box
+            pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y+1]+6,self.width-12,self.height-12)) # Inner_Box
+            #Low Left
+            pygame.draw.rect(window, self.dark_color,(posx[self.x-1], posy[self.y+1],self.width, self.height)) # Outer_Box
+            pygame.draw.rect(window, self.light_color,(posx[self.x-1]+6,posy[self.y+1]+6,self.width-12,self.height-12)) # Inner_Box
+        def West():
+            #Top Left
+            pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y-1],self.width, self.height)) # Outer_Box
+            pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y-1]+6,self.width-12,self.height-12)) # Inner_Box
+            #Top Mid = Center
+            pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y],self.width, self.height)) # Outer_Box
+            pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+            #Low Mid
+            pygame.draw.rect(window, self.dark_color,(posx[self.x+1], posy[self.y],self.width, self.height)) # Outer_Box
+            pygame.draw.rect(window, self.light_color,(posx[self.x+1]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+            #Low Left
+            pygame.draw.rect(window, self.dark_color,(posx[self.x+1], posy[self.y+1],self.width, self.height)) # Outer_Box
+            pygame.draw.rect(window, self.light_color,(posx[self.x+1]+6,posy[self.y+1]+6,self.width-12,self.height-12)) # Inner_Box
+        if self.CompasCount == 0:
+            North()
+        elif self.CompasCount == 1:
+            East()
+        elif self.CompasCount == 2:
+            South()
+        elif self.CompasCount == 3:
+            West()
 
 class T_piece():
     def __init__(self):
+        self.CompasCount = 0
         self.width = 50
         self.height = 50
         self.x = defaultx
@@ -250,19 +448,66 @@ class T_piece():
         self.light_color = purple
         self.dark_color = dark_purple
     def Draw(self):
-        #Low Left
-        pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y],self.width, self.height)) # Outer_Box
-        pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
-        #Low Mid
-        pygame.draw.rect(window, self.dark_color,(posx[self.x+1], posy[self.y],self.width, self.height)) # Outer_Box
-        pygame.draw.rect(window, self.light_color,(posx[self.x+1]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
-        #Low Right
-        pygame.draw.rect(window, self.dark_color,(posx[self.x+2], posy[self.y],self.width, self.height)) # Outer_Box
-        pygame.draw.rect(window, self.light_color,(posx[self.x+2]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
-        #self.x -= 2
-        #Top Mid
-        pygame.draw.rect(window, self.dark_color,(posx[self.x+1], posy[self.y+1],self.width, self.height)) # Outer_Box
-        pygame.draw.rect(window, self.light_color,(posx[self.x+1]+6,posy[self.y+1]+6,self.width-12,self.height-12)) # Inner_Box
+        def North():
+            #Low Left
+            pygame.draw.rect(window, self.dark_color,(posx[self.x-1], posy[self.y],self.width, self.height)) # Outer_Box
+            pygame.draw.rect(window, self.light_color,(posx[self.x-1]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+            #Low Mid = Rotation Center
+            pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y],self.width, self.height)) # Outer_Box
+            pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+            #Low Right
+            pygame.draw.rect(window, self.dark_color,(posx[self.x+1], posy[self.y],self.width, self.height)) # Outer_Box
+            pygame.draw.rect(window, self.light_color,(posx[self.x+1]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+            #Top Mid
+            pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y+1],self.width, self.height)) # Outer_Box
+            pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y+1]+6,self.width-12,self.height-12)) # Inner_Box
+        def East():
+            #Low Left
+            pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y+1],self.width, self.height)) # Outer_Box
+            pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y+1]+6,self.width-12,self.height-12)) # Inner_Box
+            #Low Mid = Rotation Center
+            pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y],self.width, self.height)) # Outer_Box
+            pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+            #Low Right
+            pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y-1],self.width, self.height)) # Outer_Box
+            pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y-1]+6,self.width-12,self.height-12)) # Inner_Box
+            #Top Mid
+            pygame.draw.rect(window, self.dark_color,(posx[self.x+1], posy[self.y],self.width, self.height)) # Outer_Box
+            pygame.draw.rect(window, self.light_color,(posx[self.x+1]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+        def South():
+            #Low Left
+            pygame.draw.rect(window, self.dark_color,(posx[self.x-1], posy[self.y],self.width, self.height)) # Outer_Box
+            pygame.draw.rect(window, self.light_color,(posx[self.x-1]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+            #Low Mid = Rotation Center
+            pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y],self.width, self.height)) # Outer_Box
+            pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+            #Low Right
+            pygame.draw.rect(window, self.dark_color,(posx[self.x+1], posy[self.y],self.width, self.height)) # Outer_Box
+            pygame.draw.rect(window, self.light_color,(posx[self.x+1]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+            #Top Mid
+            pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y-1],self.width, self.height)) # Outer_Box
+            pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y-1]+6,self.width-12,self.height-12)) # Inner_Box
+        def West():
+            #Low Left
+            pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y+1],self.width, self.height)) # Outer_Box
+            pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y+1]+6,self.width-12,self.height-12)) # Inner_Box
+            #Low Mid = Rotation Center
+            pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y],self.width, self.height)) # Outer_Box
+            pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+            #Low Right
+            pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y-1],self.width, self.height)) # Outer_Box
+            pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y-1]+6,self.width-12,self.height-12)) # Inner_Box
+            #Top Mid
+            pygame.draw.rect(window, self.dark_color,(posx[self.x-1], posy[self.y],self.width, self.height)) # Outer_Box
+            pygame.draw.rect(window, self.light_color,(posx[self.x-1]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+        if self.CompasCount == 0:
+            North()
+        elif self.CompasCount == 1:
+            East()
+        elif self.CompasCount == 2:
+            South()
+        elif self.CompasCount == 3:
+            West()
 
 class Musicplayer():
     def __init__(self):
@@ -330,7 +575,7 @@ def main_loop():
     frameCount = 0
     run_game = True
     BlockAlive = False
-    Level = 1
+    Level = 4
     BlockTypes = [o_piece, I_piece, L_piece, J_piece, S_piece, Z_piece, T_piece]#0-6
     #music = Musicplayer()
     while run_game:
@@ -387,3 +632,8 @@ def main_loop():
 
 #menu()
 main_loop()
+
+
+"""
+List = [(True/False, color, posx, posy)]
+"""
