@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-import pygame, time, sys, threading
+import pygame, time, threading
 #import pygame.mixer
 from random import randint
 """
-Tetris Party Deluxe war 20x10 blöcke groß; Alles über 21 ist gameover
+Tetris Party Deluxe war 20x10 bl�cke gro�; Alles �ber 21 ist gameover
 
 """
 
@@ -33,12 +33,12 @@ posy = [1032, 982, 932, 882, 832, 782, 732, 682, 632, 582, 532, 482, 432, 382, 3
 ScreenInfo = pygame.display.Info()
 window_size2 = ((ScreenInfo.current_w, ScreenInfo.current_h))
 window_size = (1920, 1080)  #1920, 1080
-window = pygame.display.set_mode((window_size), pygame.FULLSCREEN)
+window = pygame.display.set_mode((window_size2), pygame.FULLSCREEN)
 pygame.display.set_caption("Tetris Party remake")
 #pygame.display.set_icon(pygame.image.load("./assets/images/icon.png"))
 clock = pygame.time.Clock()
 #----------------#classes#---------------------------
-class grid():
+class grid(): # Grid is more ore less the Playfield where everything is controled (i hope)
     gridCount = 0
     def __init__(self):
         grid.gridCount += 1 #falls 2 spieler drinnen sein wird
@@ -46,12 +46,69 @@ class grid():
         self.array_y = [20]
         #if grid.gridCount == 1:
         self.x = 500 #Breite des Spielbereiches Block = 50 breit
-        self.y = 1000 # Höhe des Spielbereiches Block = 50 Hoch
-        #self.Blockarray = [(False, color=None, x = None, y = None)]
+        self.y = 1000 # H�he des Spielbereiches Block = 50 Hoch
+        self.BlockAlive = False
         grid.gridCount += 1 #falls 2 spieler drinnen sein wird
+        self.BlockArray = [[[0 for _ in range(10)] for _ in range(20)] for _ in range(3)] # z;y;x # z[0] = Ture/False werte; z[1] = color; z[2] = dar_color; 
     def Grid(self):
         pygame.draw.rect(window, white, [(window_size[0]/2-self.x), (window_size[1]-self.y), self.x, self.y], 2)
         txtOnScreen("Next:",20,(window_size[0]/2+5),(window_size[1]-1000), white)
+    def getBlocks(self,array, light, dark):
+        for y in range(len(array)):
+            self.BlockArray[0][array[y][1]][array[y][0]] = True
+            self.BlockArray[1][array[y][1]][array[y][0]] = light
+            self.BlockArray[2][array[y][1]][array[y][0]] = dark
+    def DrawBlocks(self):
+        for x in range(10):
+            for y in range(20):
+                for z in range(2):
+                    if self.BlockArray[z][y][x] == True:
+                        pygame.draw.rect(window, self.BlockArray[1][y][x],(posx[x], posy[y],50, 50)) # Outer_Box
+                        pygame.draw.rect(window, self.BlockArray[2][y][x],(posx[x]+6,posy[y]+6,50-12,50-12)) # Inner_Box
+                    else:
+                        pass
+    def MoveLeft(self, currentBlock):
+        #move left
+        currentBlock.x -= 1
+        checkLoop = True 
+        for piece in range(len(currentBlock.Blocks)):
+            if currentBlock.Blocks[piece][0] <= 0 and checkLoop == True:
+                currentBlock.x += 1 
+                checkLoop = False
+    def MoveRight(self, currentBlock):
+        #move right
+        currentBlock.x += 1
+        checkLoop = True
+        for piece in range(len(currentBlock.Blocks)):
+            if currentBlock.Blocks[piece][0] >= 9 and checkLoop == True:
+                currentBlock.x -= 1 # If its greater as the Grid it places it back
+                checkLoop = False
+    def Rotate(self, currentBlock):
+        #Rotate
+        currentBlock.CompasCount += 1
+        if currentBlock.CompasCount > 3:
+            currentBlock.CompasCount = 0
+    def FallenLeaves(self, currentBlock):
+        #move Down
+        checkLoop = True
+        for down in range(currentBlock.y):
+            if checkLoop == False:
+                break
+            elif checkLoop == True:
+                currentBlock.Draw() # Need to do this to update the array
+                for piece in range(len(currentBlock.Blocks)): # Check if it hits the ground
+                    px = currentBlock.Blocks[piece][0]
+                    py = currentBlock.Blocks[piece][1]
+                    if self.BlockArray[0][py-1][px] == True:
+                        self.getBlocks(currentBlock.Blocks, currentBlock.light_color, currentBlock.dark_color)
+                        self.BlockAlive = False
+                        checkLoop = False
+                        # self.BlockArray[0][py][px] = True
+                    elif currentBlock.Blocks[piece][1] == 0:
+                        checkLoop = False
+                currentBlock.y -= 1
+    def HitDetection(self):
+        pass
 
 #Default Spawn Position should be x = 4; y = 22
 defaultx = 4
@@ -67,20 +124,26 @@ class o_piece():
         self.y = defaulty
         self.light_color = yellow
         self.dark_color = dark_yellow
+        self.Blocks = [[1, 1], [1, 1], [1, 1], [1, 1]] #X; Y
     def Draw(self):
         #Upper Left
         pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y],self.width, self.height)) # Outer_Box
         pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+        self.Blocks[0] = ([self.x, self.y])
         #Lower Left
         pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y-1],self.width, self.height)) # Outer_Box
         pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y-1]+6,self.width-12,self.height-12)) # Inner_Box
+        self.Blocks[1] = ([self.x, self.y-1])
         #Upper Right
         pygame.draw.rect(window, self.dark_color,(posx[self.x+1], posy[self.y],self.width, self.height)) # Outer_Box
         pygame.draw.rect(window, self.light_color,(posx[self.x+1]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+        self.Blocks[2] = ([self.x+1, self.y])
         #Lower Right
         pygame.draw.rect(window, self.dark_color,(posx[self.x+1], posy[self.y-1],self.width, self.height)) # Outer_Box
         pygame.draw.rect(window, self.light_color,(posx[self.x+1]+6,posy[self.y-1]+6,self.width-12,self.height-12)) # Inner_Box
-
+        self.Blocks[3] = ([self.x+1, self.y-1])
+    def DelArray(self):
+        self.Blocks[:] = []
 
 class I_piece():
     def __init__(self):
@@ -92,67 +155,46 @@ class I_piece():
         self.y = defaulty
         self.light_color = cyan
         self.dark_color = dark_cyan
+        self.Blocks = [[1, 1], [1, 1], [1, 1], [1, 1]] #X; Y
     def Draw(self):
         def North():
             #Top
             pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y],self.width, self.height)) # Outer_Box
             pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+            self.Blocks[0] = ([self.x, self.y])
             #3rd Level
             pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y+1],self.width, self.height)) # Outer_Box
             pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y+1]+6,self.width-12,self.height-12)) # Inner_Box
+            self.Blocks[1] = ([self.x, self.y+1])
             #2nd Level
             pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y+2],self.width, self.height)) # Outer_Box
             pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y+2]+6,self.width-12,self.height-12)) # Inner_Box
+            self.Blocks[2] = ([self.x, self.y+2])
             #1st Level
             pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y+3],self.width, self.height)) # Outer_Box
             pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y+3]+6,self.width-12,self.height-12)) # Inner_Box
+            self.Blocks[3] = ([self.x, self.y+3])
         def East():
             #Top
-            pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y],self.width, self.height)) # Outer_Box
-            pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+            pygame.draw.rect(window, self.dark_color,(posx[self.x+2], posy[self.y],self.width, self.height)) # Outer_Box
+            pygame.draw.rect(window, self.light_color,(posx[self.x+2]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+            self.Blocks[0] = ([self.x+2, self.y])
             #3rd Level
             pygame.draw.rect(window, self.dark_color,(posx[self.x+1], posy[self.y],self.width, self.height)) # Outer_Box
             pygame.draw.rect(window, self.light_color,(posx[self.x+1]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+            self.Blocks[1] = ([self.x+1, self.y])
             #2nd Level
-            pygame.draw.rect(window, self.dark_color,(posx[self.x+2], posy[self.y],self.width, self.height)) # Outer_Box
-            pygame.draw.rect(window, self.light_color,(posx[self.x+2]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
-            #1st Level
-            pygame.draw.rect(window, self.dark_color,(posx[self.x+3], posy[self.y],self.width, self.height)) # Outer_Box
-            pygame.draw.rect(window, self.light_color,(posx[self.x+3]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
-        def West():
-            #Top
             pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y],self.width, self.height)) # Outer_Box
             pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
-            #3rd Level
+            self.Blocks[2] = ([self.x, self.y])
+            #1st Level
             pygame.draw.rect(window, self.dark_color,(posx[self.x-1], posy[self.y],self.width, self.height)) # Outer_Box
             pygame.draw.rect(window, self.light_color,(posx[self.x-1]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
-            #2nd Level
-            pygame.draw.rect(window, self.dark_color,(posx[self.x-2], posy[self.y],self.width, self.height)) # Outer_Box
-            pygame.draw.rect(window, self.light_color,(posx[self.x-2]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
-            #1st Level
-            pygame.draw.rect(window, self.dark_color,(posx[self.x-3], posy[self.y],self.width, self.height)) # Outer_Box
-            pygame.draw.rect(window, self.light_color,(posx[self.x-3]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
-        def South():
-            #Top
-            pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y-3],self.width, self.height)) # Outer_Box
-            pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y-3]+6,self.width-12,self.height-12)) # Inner_Box
-            #3rd Level
-            pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y-2],self.width, self.height)) # Outer_Box
-            pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y-2]+6,self.width-12,self.height-12)) # Inner_Box
-            #2nd Level
-            pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y-1],self.width, self.height)) # Outer_Box
-            pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y-1]+6,self.width-12,self.height-12)) # Inner_Box
-            #1st Level
-            pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y],self.width, self.height)) # Outer_Box
-            pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
-        if self.CompasCount == 0:
+            self.Blocks[3] = ([self.x-1, self.y])
+        if self.CompasCount == 0 or self.CompasCount == 2:
             North()
-        elif self.CompasCount == 1:
+        elif self.CompasCount == 1 or self.CompasCount == 3 :
             East()
-        elif self.CompasCount == 2:
-            South()
-        elif self.CompasCount == 3:
-            West()
 
 class L_piece():
     def __init__(self):
@@ -163,59 +205,76 @@ class L_piece():
         self.y = defaulty
         self.light_color = orange
         self.dark_color = dark_orange
+        self.Blocks = [[1, 1], [1, 1], [1, 1], [1, 1]] #X; Y
     def Draw(self):
         def North():
             #Top Left
             pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y+2],self.width, self.height)) # Outer_Box
             pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y+2]+6,self.width-12,self.height-12)) # Inner_Box
+            self.Blocks[0] = ([self.x, self.y+2])
             #Mid Left
             pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y+1],self.width, self.height)) # Outer_Box
             pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y+1]+6,self.width-12,self.height-12)) # Inner_Box
+            self.Blocks[1] = ([self.x, self.y+1])
             #Low Left == Rotation Center
             pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y],self.width, self.height)) # Outer_Box
             pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+            self.Blocks[2] = ([self.x, self.y])
             #Low Right
             pygame.draw.rect(window, self.dark_color,(posx[self.x+1], posy[self.y],self.width, self.height)) # Outer_Box
             pygame.draw.rect(window, self.light_color,(posx[self.x+1]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+            self.Blocks[3] = ([self.x+1, self.y])
         def East():
             #Top Left
             pygame.draw.rect(window, self.dark_color,(posx[self.x+2], posy[self.y],self.width, self.height)) # Outer_Box
             pygame.draw.rect(window, self.light_color,(posx[self.x+2]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+            self.Blocks[0] = ([self.x+2, self.y])
             #Mid Left
             pygame.draw.rect(window, self.dark_color,(posx[self.x+1], posy[self.y],self.width, self.height)) # Outer_Box
             pygame.draw.rect(window, self.light_color,(posx[self.x+1]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+            self.Blocks[1] = ([self.x+1, self.y])
             #Low Left == Rotation Center
             pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y],self.width, self.height)) # Outer_Box
             pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+            self.Blocks[2] = ([self.x, self.y])
             #Low Right
             pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y-1],self.width, self.height)) # Outer_Box
             pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y-1]+6,self.width-12,self.height-12)) # Inner_Box
+            self.Blocks[3] = ([self.x, self.y-1])
         def South():
             #Top Left
             pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y-2],self.width, self.height)) # Outer_Box
             pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y-2]+6,self.width-12,self.height-12)) # Inner_Box
+            self.Blocks[0] = ([self.x, self.y-2])
             #Mid Left
             pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y-1],self.width, self.height)) # Outer_Box
             pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y-1]+6,self.width-12,self.height-12)) # Inner_Box
+            self.Blocks[1] = ([self.x, self.y-1])
             #Low Left == Rotation Center
             pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y],self.width, self.height)) # Outer_Box
             pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+            self.Blocks[2] = ([self.x, self.y])
             #Low Right
             pygame.draw.rect(window, self.dark_color,(posx[self.x-1], posy[self.y],self.width, self.height)) # Outer_Box
             pygame.draw.rect(window, self.light_color,(posx[self.x-1]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+            self.Blocks[3] = ([self.x-1, self.y])
         def West():
             #Top Left
             pygame.draw.rect(window, self.dark_color,(posx[self.x-2], posy[self.y],self.width, self.height)) # Outer_Box
             pygame.draw.rect(window, self.light_color,(posx[self.x-2]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+            self.Blocks[0] = ([self.x-2, self.y])
             #Mid Left
             pygame.draw.rect(window, self.dark_color,(posx[self.x-1], posy[self.y],self.width, self.height)) # Outer_Box
             pygame.draw.rect(window, self.light_color,(posx[self.x-1]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+            self.Blocks[1] = ([self.x-1, self.y])
             #Low Left == Rotation Center
             pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y],self.width, self.height)) # Outer_Box
             pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+            self.Blocks[2] = ([self.x, self.y])
             #Low Right
             pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y+1],self.width, self.height)) # Outer_Box
             pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y+1]+6,self.width-12,self.height-12)) # Inner_Box
+            self.Blocks[3] = ([self.x, self.y+1])
         if self.CompasCount == 0:
             North()
         elif self.CompasCount == 1:
@@ -234,59 +293,76 @@ class J_piece():
         self.y = defaulty
         self.light_color = blue
         self.dark_color = dark_blue
+        self.Blocks = [[1, 1], [1, 1], [1, 1], [1, 1]] #X; Y
     def Draw(self):
         def North():
             #Top Right
             pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y+2],self.width, self.height)) # Outer_Box
             pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y+2]+6,self.width-12,self.height-12)) # Inner_Box
+            self.Blocks[0] = ([self.x, self.y+2])
             #Mid Right
             pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y+1],self.width, self.height)) # Outer_Box
             pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y+1]+6,self.width-12,self.height-12)) # Inner_Box
+            self.Blocks[1] = ([self.x, self.y+1])
             #Low Right == Rotation Center
             pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y],self.width, self.height)) # Outer_Box
             pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+            self.Blocks[2] = ([self.x, self.y])
             #Low Left
             pygame.draw.rect(window, self.dark_color,(posx[self.x-1], posy[self.y],self.width, self.height)) # Outer_Box
             pygame.draw.rect(window, self.light_color,(posx[self.x-1]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+            self.Blocks[3] = ([self.x-1, self.y])
         def East():
             #Top Right
             pygame.draw.rect(window, self.dark_color,(posx[self.x+2], posy[self.y],self.width, self.height)) # Outer_Box
             pygame.draw.rect(window, self.light_color,(posx[self.x+2]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+            self.Blocks[0] = ([self.x+2, self.y])
             #Mid Right
             pygame.draw.rect(window, self.dark_color,(posx[self.x+1], posy[self.y],self.width, self.height)) # Outer_Box
             pygame.draw.rect(window, self.light_color,(posx[self.x+1]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+            self.Blocks[1] = ([self.x+1, self.y])
             #Low Right == Rotation Center
             pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y],self.width, self.height)) # Outer_Box
             pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+            self.Blocks[2] = ([self.x, self.y])
             #Low Left
             pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y+1],self.width, self.height)) # Outer_Box
             pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y+1]+6,self.width-12,self.height-12)) # Inner_Box
+            self.Blocks[3] = ([self.x, self.y+1])
         def South():
             #Top Right
             pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y-2],self.width, self.height)) # Outer_Box
             pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y-2]+6,self.width-12,self.height-12)) # Inner_Box
+            self.Blocks[0] = ([self.x, self.y-2])
             #Mid Right
             pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y-1],self.width, self.height)) # Outer_Box
             pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y-1]+6,self.width-12,self.height-12)) # Inner_Box
+            self.Blocks[1] = ([self.x, self.y-1])
             #Low Right == Rotation Center
             pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y],self.width, self.height)) # Outer_Box
             pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+            self.Blocks[2] = ([self.x, self.y])
             #Low Left
             pygame.draw.rect(window, self.dark_color,(posx[self.x+1], posy[self.y],self.width, self.height)) # Outer_Box
             pygame.draw.rect(window, self.light_color,(posx[self.x+1]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+            self.Blocks[3] = ([self.x+1, self.y])
         def West():
             #Top Right
             pygame.draw.rect(window, self.dark_color,(posx[self.x-2], posy[self.y],self.width, self.height)) # Outer_Box
             pygame.draw.rect(window, self.light_color,(posx[self.x-2]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+            self.Blocks[0] = ([self.x-2, self.y])
             #Mid Right
             pygame.draw.rect(window, self.dark_color,(posx[self.x-1], posy[self.y],self.width, self.height)) # Outer_Box
             pygame.draw.rect(window, self.light_color,(posx[self.x-1]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+            self.Blocks[1] = ([self.x-1, self.y])
             #Low Right == Rotation Center
             pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y],self.width, self.height)) # Outer_Box
             pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+            self.Blocks[2] = ([self.x, self.y])
             #Low Left
             pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y-1],self.width, self.height)) # Outer_Box
             pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y-1]+6,self.width-12,self.height-12)) # Inner_Box
+            self.Blocks[3] = ([self.x, self.y-1])
         if self.CompasCount == 0:
             North()
         elif self.CompasCount == 1:
@@ -305,59 +381,76 @@ class S_piece():
         self.y = defaulty
         self.light_color = green
         self.dark_color = dark_green
+        self.Blocks = [[1, 1], [1, 1], [1, 1], [1, 1]] #X; Y
     def Draw(self):
         def North():
             #Top Right
             pygame.draw.rect(window, self.dark_color,(posx[self.x+1], posy[self.y],self.width, self.height)) # Outer_Box
             pygame.draw.rect(window, self.light_color,(posx[self.x+1]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+            self.Blocks[0] = ([self.x+1, self.y])
             #Top Mid = Center
             pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y],self.width, self.height)) # Outer_Box
             pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+            self.Blocks[1] = ([self.x, self.y])
             #Low Mid
             pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y-1],self.width, self.height)) # Outer_Box
             pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y-1]+6,self.width-12,self.height-12)) # Inner_Box
+            self.Blocks[2] = ([self.x, self.y-1])
             #Low Left
             pygame.draw.rect(window, self.dark_color,(posx[self.x-1], posy[self.y-1],self.width, self.height)) # Outer_Box
             pygame.draw.rect(window, self.light_color,(posx[self.x-1]+6,posy[self.y-1]+6,self.width-12,self.height-12)) # Inner_Box
+            self.Blocks[3] = ([self.x-1, self.y-1])
         def East():
             #Top Right
             pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y-1],self.width, self.height)) # Outer_Box
             pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y-1]+6,self.width-12,self.height-12)) # Inner_Box
+            self.Blocks[0] = ([self.x, self.y-1])
             #Top Mid = Center
             pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y],self.width, self.height)) # Outer_Box
             pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+            self.Blocks[1] = ([self.x, self.y])
             #Low Mid
             pygame.draw.rect(window, self.dark_color,(posx[self.x-1], posy[self.y],self.width, self.height)) # Outer_Box
             pygame.draw.rect(window, self.light_color,(posx[self.x-1]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+            self.Blocks[2] = ([self.x-1, self.y])
             #Low Left
             pygame.draw.rect(window, self.dark_color,(posx[self.x-1], posy[self.y+1],self.width, self.height)) # Outer_Box
             pygame.draw.rect(window, self.light_color,(posx[self.x-1]+6,posy[self.y+1]+6,self.width-12,self.height-12)) # Inner_Box
+            self.Blocks[3] = ([self.x-1, self.y+1])
         def South():
             #Top Right
             pygame.draw.rect(window, self.dark_color,(posx[self.x-1], posy[self.y],self.width, self.height)) # Outer_Box
             pygame.draw.rect(window, self.light_color,(posx[self.x-1]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+            self.Blocks[0] = ([self.x-1, self.y])
             #Top Mid = Center
             pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y],self.width, self.height)) # Outer_Box
             pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+            self.Blocks[1] = ([self.x, self.y])
             #Low Mid
             pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y+1],self.width, self.height)) # Outer_Box
             pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y+1]+6,self.width-12,self.height-12)) # Inner_Box
+            self.Blocks[2] = ([self.x, self.y+1])
             #Low Left
             pygame.draw.rect(window, self.dark_color,(posx[self.x+1], posy[self.y+1],self.width, self.height)) # Outer_Box
             pygame.draw.rect(window, self.light_color,(posx[self.x+1]+6,posy[self.y+1]+6,self.width-12,self.height-12)) # Inner_Box
+            self.Blocks[3] = ([self.x+1, self.y+1])
         def West():
             #Top Right
             pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y-1],self.width, self.height)) # Outer_Box
             pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y-1]+6,self.width-12,self.height-12)) # Inner_Box
+            self.Blocks[0] = ([self.x, self.y-1])
             #Top Mid = Center
             pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y],self.width, self.height)) # Outer_Box
             pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+            self.Blocks[1] = ([self.x, self.y])
             #Low Mid
             pygame.draw.rect(window, self.dark_color,(posx[self.x-1], posy[self.y],self.width, self.height)) # Outer_Box
             pygame.draw.rect(window, self.light_color,(posx[self.x-1]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+            self.Blocks[2] = ([self.x-1, self.y])
             #Low Left
             pygame.draw.rect(window, self.dark_color,(posx[self.x-1], posy[self.y+1],self.width, self.height)) # Outer_Box
             pygame.draw.rect(window, self.light_color,(posx[self.x-1]+6,posy[self.y+1]+6,self.width-12,self.height-12)) # Inner_Box
+            self.Blocks[3] = ([self.x-1, self.y+2])
         if self.CompasCount == 0:
             North()
         elif self.CompasCount == 1:
@@ -376,59 +469,76 @@ class Z_piece():
         self.y = defaulty
         self.light_color = red
         self.dark_color = dark_red
+        self.Blocks = [[1, 1], [1, 1], [1, 1], [1, 1]] #X; Y
     def Draw(self):
         def North():
             #Top Left
             pygame.draw.rect(window, self.dark_color,(posx[self.x-1], posy[self.y],self.width, self.height)) # Outer_Box
             pygame.draw.rect(window, self.light_color,(posx[self.x-1]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+            self.Blocks[0] = ([self.x-1, self.y])
             #Top Mid = Center
             pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y],self.width, self.height)) # Outer_Box
             pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+            self.Blocks[1] = ([self.x, self.y])
             #Low Mid
             pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y-1],self.width, self.height)) # Outer_Box
             pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y-1]+6,self.width-12,self.height-12)) # Inner_Box
+            self.Blocks[2] = ([self.x, self.y-1])
             #Low Right
             pygame.draw.rect(window, self.dark_color,(posx[self.x+1], posy[self.y-1],self.width, self.height)) # Outer_Box
             pygame.draw.rect(window, self.light_color,(posx[self.x+1]+6,posy[self.y-1]+6,self.width-12,self.height-12)) # Inner_Box
+            self.Blocks[3] = ([self.x+1, self.y-1])
         def East():
             #Top Left
             pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y+1],self.width, self.height)) # Outer_Box
             pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y+1]+6,self.width-12,self.height-12)) # Inner_Box
+            self.Blocks[0] = ([self.x, self.y+1])
             #Top Mid = Center
             pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y],self.width, self.height)) # Outer_Box
             pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+            self.Blocks[1] = ([self.x, self.y])
             #Low Mid
             pygame.draw.rect(window, self.dark_color,(posx[self.x-1], posy[self.y],self.width, self.height)) # Outer_Box
             pygame.draw.rect(window, self.light_color,(posx[self.x-1]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+            self.Blocks[2] = ([self.x-1, self.y])
             #Low Left
             pygame.draw.rect(window, self.dark_color,(posx[self.x-1], posy[self.y-1],self.width, self.height)) # Outer_Box
             pygame.draw.rect(window, self.light_color,(posx[self.x-1]+6,posy[self.y-1]+6,self.width-12,self.height-12)) # Inner_Box
+            self.Blocks[3] = ([self.x-1, self.y-1])
         def South():
             #Top Left
             pygame.draw.rect(window, self.dark_color,(posx[self.x+1], posy[self.y],self.width, self.height)) # Outer_Box
             pygame.draw.rect(window, self.light_color,(posx[self.x+1]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+            self.Blocks[0] = ([self.x+1, self.y])
             #Top Mid = Center
             pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y],self.width, self.height)) # Outer_Box
             pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+            self.Blocks[1] = ([self.x, self.y])
             #Low Mid
             pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y+1],self.width, self.height)) # Outer_Box
             pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y+1]+6,self.width-12,self.height-12)) # Inner_Box
+            self.Blocks[2] = ([self.x, self.y+1])
             #Low Left
             pygame.draw.rect(window, self.dark_color,(posx[self.x-1], posy[self.y+1],self.width, self.height)) # Outer_Box
             pygame.draw.rect(window, self.light_color,(posx[self.x-1]+6,posy[self.y+1]+6,self.width-12,self.height-12)) # Inner_Box
+            self.Blocks[3] = ([self.x-1, self.y+1])
         def West():
             #Top Left
             pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y-1],self.width, self.height)) # Outer_Box
             pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y-1]+6,self.width-12,self.height-12)) # Inner_Box
+            self.Blocks[0] = ([self.x, self.y-1])
             #Top Mid = Center
             pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y],self.width, self.height)) # Outer_Box
             pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+            self.Blocks[1] = ([self.x, self.y])
             #Low Mid
             pygame.draw.rect(window, self.dark_color,(posx[self.x+1], posy[self.y],self.width, self.height)) # Outer_Box
             pygame.draw.rect(window, self.light_color,(posx[self.x+1]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+            self.Blocks[2] = ([self.x+1, self.y])
             #Low Left
             pygame.draw.rect(window, self.dark_color,(posx[self.x+1], posy[self.y+1],self.width, self.height)) # Outer_Box
             pygame.draw.rect(window, self.light_color,(posx[self.x+1]+6,posy[self.y+1]+6,self.width-12,self.height-12)) # Inner_Box
+            self.Blocks[3] = ([self.x+1, self.y+1])
         if self.CompasCount == 0:
             North()
         elif self.CompasCount == 1:
@@ -447,59 +557,76 @@ class T_piece():
         self.y = defaulty
         self.light_color = purple
         self.dark_color = dark_purple
+        self.Blocks = [[1, 1], [1, 1], [1, 1], [1, 1]] #X; Y
     def Draw(self):
         def North():
             #Low Left
             pygame.draw.rect(window, self.dark_color,(posx[self.x-1], posy[self.y],self.width, self.height)) # Outer_Box
             pygame.draw.rect(window, self.light_color,(posx[self.x-1]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+            self.Blocks[0] = ([self.x-1, self.y])
             #Low Mid = Rotation Center
             pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y],self.width, self.height)) # Outer_Box
             pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+            self.Blocks[1] = ([self.x, self.y])
             #Low Right
             pygame.draw.rect(window, self.dark_color,(posx[self.x+1], posy[self.y],self.width, self.height)) # Outer_Box
             pygame.draw.rect(window, self.light_color,(posx[self.x+1]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+            self.Blocks[2] = ([self.x+1, self.y])
             #Top Mid
             pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y+1],self.width, self.height)) # Outer_Box
             pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y+1]+6,self.width-12,self.height-12)) # Inner_Box
+            self.Blocks[3] = ([self.x, self.y+1])
         def East():
             #Low Left
             pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y+1],self.width, self.height)) # Outer_Box
             pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y+1]+6,self.width-12,self.height-12)) # Inner_Box
+            self.Blocks[0] = ([self.x, self.y+1])
             #Low Mid = Rotation Center
             pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y],self.width, self.height)) # Outer_Box
             pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+            self.Blocks[1] = ([self.x, self.y])
             #Low Right
             pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y-1],self.width, self.height)) # Outer_Box
             pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y-1]+6,self.width-12,self.height-12)) # Inner_Box
+            self.Blocks[2] = ([self.x, self.y-1])
             #Top Mid
             pygame.draw.rect(window, self.dark_color,(posx[self.x+1], posy[self.y],self.width, self.height)) # Outer_Box
             pygame.draw.rect(window, self.light_color,(posx[self.x+1]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+            self.Blocks[3] = ([self.x+1, self.y])
         def South():
             #Low Left
             pygame.draw.rect(window, self.dark_color,(posx[self.x-1], posy[self.y],self.width, self.height)) # Outer_Box
             pygame.draw.rect(window, self.light_color,(posx[self.x-1]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+            self.Blocks[0] = ([self.x-1, self.y])
             #Low Mid = Rotation Center
             pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y],self.width, self.height)) # Outer_Box
             pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+            self.Blocks[1] = ([self.x, self.y])
             #Low Right
             pygame.draw.rect(window, self.dark_color,(posx[self.x+1], posy[self.y],self.width, self.height)) # Outer_Box
             pygame.draw.rect(window, self.light_color,(posx[self.x+1]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+            self.Blocks[2] = ([self.x+1, self.y])
             #Top Mid
             pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y-1],self.width, self.height)) # Outer_Box
             pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y-1]+6,self.width-12,self.height-12)) # Inner_Box
+            self.Blocks[3] = ([self.x, self.y-1])
         def West():
             #Low Left
             pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y+1],self.width, self.height)) # Outer_Box
             pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y+1]+6,self.width-12,self.height-12)) # Inner_Box
+            self.Blocks[0] = ([self.x, self.y+1])
             #Low Mid = Rotation Center
             pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y],self.width, self.height)) # Outer_Box
             pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+            self.Blocks[1] = ([self.x, self.y])
             #Low Right
             pygame.draw.rect(window, self.dark_color,(posx[self.x], posy[self.y-1],self.width, self.height)) # Outer_Box
             pygame.draw.rect(window, self.light_color,(posx[self.x]+6,posy[self.y-1]+6,self.width-12,self.height-12)) # Inner_Box
+            self.Blocks[2] = ([self.x, self.y-1])
             #Top Mid
             pygame.draw.rect(window, self.dark_color,(posx[self.x-1], posy[self.y],self.width, self.height)) # Outer_Box
             pygame.draw.rect(window, self.light_color,(posx[self.x-1]+6,posy[self.y]+6,self.width-12,self.height-12)) # Inner_Box
+            self.Blocks[3] = ([self.x-1, self.y])
         if self.CompasCount == 0:
             North()
         elif self.CompasCount == 1:
@@ -565,7 +692,7 @@ def menu():
                 if event.key is pygame.K_p:
                     main_loop()
         window.fill(white)
-        txtOnScreen("Menü Test", 60,(955),(540), blue)
+        txtOnScreen("Men� Test", 60,(955),(540), blue)
         pygame.display.update()
         clock.tick(fps)
 
@@ -574,8 +701,8 @@ def main_loop():
     fps=60
     frameCount = 0
     run_game = True
-    BlockAlive = False
-    Level = 4
+    # BlockAlive = False
+    Level = 10
     BlockTypes = [o_piece, I_piece, L_piece, J_piece, S_piece, Z_piece, T_piece]#0-6
     #music = Musicplayer()
     while run_game:
@@ -591,40 +718,32 @@ def main_loop():
                 if event.key is pygame.K_m:
                     music.PlayStop()
                 if event.key is pygame.K_d:
-                    #move right
-                    currentBlock.x += 1
-                    if currentBlock.x >= 9:
-                        currentBlock.x = 9
+                    p1.MoveRight(currentBlock)
                 if event.key is pygame.K_a:
-                    #move left
-                    currentBlock.x -= 1
-                    if currentBlock.x <= 0:
-                        currentBlock.x = 0
+                    p1.MoveLeft(currentBlock)
                 if event.key is pygame.K_s:
-                    #move Down
-                    currentBlock.y = 0
+                    p1.FallenLeaves(currentBlock)
                 if event.key is pygame.K_w:
-                    #Rotate
-                    currentBlock.CompasCount += 1
-                    if currentBlock.CompasCount > 3:
-                        currentBlock.CompasCount = 0
+                    p1.Rotate(currentBlock)
         window.fill(black)
         txtOnScreen("Tetris?", 60,0,0, white)
         pygame.draw.rect(window, red,(0,(1080-54),54,54))
-        if BlockAlive == False:
+        if p1.BlockAlive == False:
             randBox = randint(0,6)
-            currentBlock = BlockTypes[randBox]()
-            BlockAlive = True
+            currentBlock = BlockTypes[randBox]() # currentBlock = BlockTypes[randBox]()
+            p1.BlockAlive = True
         else:
             pass
         frameCount += 1 #1 Second == FPS. If Counter reaches 60 this means time passed 1 Second
         if frameCount == (fps/(Level*0.50)):
             currentBlock.y -= 1
             frameCount = 0
-        if currentBlock.y <= 1:
-            BlockAlive = False
+        for y in range(len(currentBlock.Blocks)): # Checks if some of the 4 Blocks hits the ground
+            if currentBlock.Blocks[y][1] <= 0:
+                p1.getBlocks(currentBlock.Blocks, currentBlock.light_color, currentBlock.dark_color)
+                p1.BlockAlive = False
         currentBlock.Draw()
-        p1 = grid()
+        p1.DrawBlocks()
         p1.Grid()
         pygame.display.update()
         clock.tick(fps)
