@@ -28,7 +28,7 @@ dark_cyan=(0,150,150)
 
 #-----------------#Position Array#------------------------
 posx=[462,512, 562, 612, 662, 712, 762, 812, 862, 912]# 0 Left; 9 Right
-posy = [1032, 982, 932, 882, 832, 782, 732, 682, 632, 582, 532, 482, 432, 382, 332, 282, 232, 182, 132, 82, 32, -18, -68, -118, -168] #19 top; 0 bottom
+posy = [1032, 982, 932, 882, 832, 782, 732, 682, 632, 582, 532, 482, 432, 382, 332, 282, 232, 182, 132, 82, 32, -18, -68, -118, -168, -218, -268, -318, -368] #19 top; 0 bottom
 #-----------------#Window Options#-----------------
 ScreenInfo = pygame.display.Info()
 window_size2 = ((ScreenInfo.current_w, ScreenInfo.current_h))
@@ -48,12 +48,28 @@ class grid(): # Grid is more ore less the Playfield where everything is controle
         self.x = 500 #Breite des Spielbereiches Block = 50 breit
         self.y = 1000 # H�he des Spielbereiches Block = 50 Hoch
         self.BlockAlive = False
-        grid.gridCount += 1 #falls 2 spieler drinnen sein wird
-        self.BlockArray = [[[0 for _ in range(10)] for _ in range(20)] for _ in range(3)] # z;y;x # z[0] = Ture/False werte; z[1] = color; z[2] = dar_color; 
+        self.BlockArray = [[[0 for _ in range(10)] for _ in range(20)] for _ in range(3)] # z;y;x # z[0] = Ture/False werte; z[1] = color; z[2] = dar_color;
+        self.activeBlock = None
+        self.Hold = None
+        self.swapAction = False
     def Grid(self):
         pygame.draw.rect(window, white, [(window_size[0]/2-self.x), (window_size[1]-self.y), self.x, self.y], 2)
         txtOnScreen("Next:",20,(window_size[0]/2+5),(window_size[1]-1000), white)
-    def getBlocks(self,array, light, dark):
+    def RandomBlock(self):
+        BlockTypes = [o_piece, I_piece, L_piece, J_piece, S_piece, Z_piece, T_piece]#0-6
+        if self.BlockAlive == False and self.swapAction == False:
+            randBox = randint(0,6)
+            self.activeBlock = BlockTypes[randBox]() # currentBlock = BlockTypes[randBox]()
+            self.BlockAlive = True
+
+        elif self.BlockAlive == False and self.swapAction == True:
+            copy = self.Hold
+            self.Hold = self.activeBlock
+            self.activeBlock = BlockTypes[copy]
+            self.swapAction = False
+            self.BlockAlive = True
+
+    def getBlocks(self, array, light, dark):
         for y in range(len(array)):
             self.BlockArray[0][array[y][1]][array[y][0]] = True
             self.BlockArray[1][array[y][1]][array[y][0]] = light
@@ -61,12 +77,12 @@ class grid(): # Grid is more ore less the Playfield where everything is controle
     def DrawBlocks(self):
         for x in range(10):
             for y in range(20):
-                for z in range(2):
-                    if self.BlockArray[z][y][x] == True:
-                        pygame.draw.rect(window, self.BlockArray[1][y][x],(posx[x], posy[y],50, 50)) # Outer_Box
-                        pygame.draw.rect(window, self.BlockArray[2][y][x],(posx[x]+6,posy[y]+6,50-12,50-12)) # Inner_Box
-                    else:
-                        pass
+                # for z in range(2):
+                if self.BlockArray[0][y][x] == True:
+                    pygame.draw.rect(window, self.BlockArray[1][y][x],(posx[x], posy[y],50, 50)) # Outer_Box
+                    pygame.draw.rect(window, self.BlockArray[2][y][x],(posx[x]+6,posy[y]+6,50-12,50-12)) # Inner_Box
+                else:
+                    pass
     def MoveLeft(self, currentBlock):
         #move left
         currentBlock.x -= 1
@@ -90,6 +106,7 @@ class grid(): # Grid is more ore less the Playfield where everything is controle
             currentBlock.CompasCount = 0
     def FallenLeaves(self, currentBlock):
         #move Down
+        frameCount = 0
         checkLoop = True
         for down in range(currentBlock.y):
             if checkLoop == False:
@@ -107,8 +124,72 @@ class grid(): # Grid is more ore less the Playfield where everything is controle
                     elif currentBlock.Blocks[piece][1] == 0:
                         checkLoop = False
                 currentBlock.y -= 1
-    def HitDetection(self):
-        pass
+    def HitDetection(self, currentBlock):
+        checkLoop = True
+        for piece in range(len(currentBlock.Blocks)):
+            px = currentBlock.Blocks[piece][0]
+            py = currentBlock.Blocks[piece][1]
+            if checkLoop == False:
+                break
+            try:
+                if self.BlockArray[0][py-1][px] == True:
+                    self.getBlocks(currentBlock.Blocks, currentBlock.light_color, currentBlock.dark_color)
+                    self.BlockAlive = False
+                    checkLoop = False
+            except:
+                pass
+    def SwapHold(self):
+        print(self.activeBlock.__class__.__name__)#
+        # Randomblock funktion muss vorher in in grid her
+        if self.Hold == None:
+            copy = self.activeBlock.__class__.__name__
+            if copy == "o_piece":
+                self.Hold = 0
+            elif copy == "I_piece":
+                self.Hold = 1
+            elif copy == "L_piece":
+                self.Hold = 2
+            elif copy == "J_piece":
+                self.Hold = 3
+            elif copy == "S_piece":
+                self.Hold = 4
+            elif copy == "Z_piece":
+                self.Hold = 5
+            elif copy == "T_piece":
+                self.Hold = 6
+            # self.Hold = type(self.activeBlock.__class__.__name__
+            self.BlockAlive = False
+        else:
+            self.BlockAlive = False
+            self.swapAction = True
+            self.RandomBlock()
+
+    def CheckRows(self):
+        YArray = []
+        Ycount = 0
+        Xchecker = 0
+        Xcount = 0
+        for y in range(20):
+            for x in range(10):
+                if self.BlockArray[0][y][x] == True:
+                    Xcount += 1
+            if Xcount == 10:
+                Xcount = 0
+                Ycount += 1
+                YArray.append(y)
+            Xcount = 0
+        if Ycount >= 1:
+            Ycount = 0
+            for y in range(len(YArray)):
+                Yint = YArray[y]
+                for x in range(10):
+                    self.BlockArray[0][Yint][x] = False
+                    for y in range(min(YArray), max(YArray)):
+                        offset = y + 1
+                        copy = self.BlockArray[0][offset]
+                        self.BlockArray[0][y] = copy
+                        # copy = self.BlockArray[0][y]
+                        # self.BlockArray[0][y+1] = copy
 
 #Default Spawn Position should be x = 4; y = 22
 defaultx = 4
@@ -702,7 +783,7 @@ def main_loop():
     frameCount = 0
     run_game = True
     # BlockAlive = False
-    Level = 10
+    Level = 6
     BlockTypes = [o_piece, I_piece, L_piece, J_piece, S_piece, Z_piece, T_piece]#0-6
     #music = Musicplayer()
     while run_game:
@@ -718,33 +799,33 @@ def main_loop():
                 if event.key is pygame.K_m:
                     music.PlayStop()
                 if event.key is pygame.K_d:
-                    p1.MoveRight(currentBlock)
+                    p1.MoveRight(p1.activeBlock)
                 if event.key is pygame.K_a:
-                    p1.MoveLeft(currentBlock)
+                    p1.MoveLeft(p1.activeBlock)
                 if event.key is pygame.K_s:
-                    p1.FallenLeaves(currentBlock)
+                    p1.FallenLeaves(p1.activeBlock)
                 if event.key is pygame.K_w:
-                    p1.Rotate(currentBlock)
+                    p1.Rotate(p1.activeBlock)
+                if event.key is pygame.K_SPACE:
+                    p1.SwapHold()
         window.fill(black)
         txtOnScreen("Tetris?", 60,0,0, white)
         pygame.draw.rect(window, red,(0,(1080-54),54,54))
         if p1.BlockAlive == False:
-            randBox = randint(0,6)
-            currentBlock = BlockTypes[randBox]() # currentBlock = BlockTypes[randBox]()
-            p1.BlockAlive = True
-        else:
-            pass
+            p1.RandomBlock()
         frameCount += 1 #1 Second == FPS. If Counter reaches 60 this means time passed 1 Second
         if frameCount == (fps/(Level*0.50)):
-            currentBlock.y -= 1
+            p1.activeBlock.y -= 1
             frameCount = 0
-        for y in range(len(currentBlock.Blocks)): # Checks if some of the 4 Blocks hits the ground
-            if currentBlock.Blocks[y][1] <= 0:
-                p1.getBlocks(currentBlock.Blocks, currentBlock.light_color, currentBlock.dark_color)
+        for y in range(len(p1.activeBlock.Blocks)): # Checks if some of the 4 Blocks hits the ground
+            if p1.activeBlock.Blocks[y][1] <= 0:
+                p1.getBlocks(p1.activeBlock.Blocks, p1.activeBlock.light_color, p1.activeBlock.dark_color)
                 p1.BlockAlive = False
-        currentBlock.Draw()
+        p1.activeBlock.Draw()
         p1.DrawBlocks()
         p1.Grid()
+        p1.HitDetection(p1.activeBlock)
+        p1.CheckRows()
         pygame.display.update()
         clock.tick(fps)
 
