@@ -196,23 +196,43 @@ class grid(): # Grid is more ore less the Playfield where everything is controle
             Wenn komplett leer --> Reihe darf nach unten
             Es muss von unten nach oben abgearbeitet werden. 
             """
-            Dont_move = None
+            YArray = []
+            Xcount = 0
             for y in range(20):
                 for x in range(10):
-                    if self.BlockArray[0][y][x] == True:
-                        Dont_move = True
-                        break
-                if Dont_move == True:
-                    Dont_move = False
-                    pass
-                else:
-                    for yy in range(y, 19): #This still need testing!!
-                        #Get Block above
-                        copy_block = self.BlockArray[0][y+1]
-                        copy_color = self.BlockArray[1][y+1]
-                        #Replace empty line with Copy
-                        self.BlockArray[0][y] = copy_block
-                        self.BlockArray[1][y] = copy_color
+                    if self.BlockArray[0][y][x] == False:
+                        Xcount += 1
+                        if Xcount == 10:
+                            YArray.append(y)
+                if Xcount == 10:
+                    Xcount = 0
+                    for line in YArray:
+                        for yy in range(line, 20):
+                            #Get Block above
+                            copy_block = self.BlockArray[0][yy+1]
+                            copy_color_light = self.BlockArray[1][yy+1]
+                            copy_color_dark = self.BlockArray[2][yy+1]
+                            #Replace empty line with Copy
+                            self.BlockArray[0][yy] = copy_block
+                            self.BlockArray[1][yy] = copy_color_light
+                            self.BlockArray[2][yy] = copy_color_dark
+                #Versuch 1
+            # for y in range(20):
+            #     for x in range(10):
+            #         if self.BlockArray[0][y][x] == False:
+            #             Xcount += 1
+            #             if Xcount == 10:
+            #                 YArray.append(y)
+            #     if Xcount == 10:
+            #         for yy in range(y, 19): #This still need testing!!
+            #             #Get Block above
+            #             copy_block = self.BlockArray[0][y+1]
+            #             copy_color_light = self.BlockArray[1][y+1]
+            #             copy_color_dark = self.BlockArray[2][y+1]
+            #             #Replace empty line with Copy
+            #             self.BlockArray[0][y] = copy_block
+            #             self.BlockArray[1][y] = copy_color_light
+            #             self.BlockArray[2][y] = copy_color_dark
 
 
 #Default Spawn Position should be x = 4; y = 22
