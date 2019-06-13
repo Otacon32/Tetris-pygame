@@ -875,8 +875,10 @@ def main_loop():
 
 
 #menu()
-main_loop()
+# main_loop()
 
+if __name__ == '__main__':
+    main_loop()
 
 """
 List = [(True/False, color, posx, posy)]

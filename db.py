@@ -15,3 +15,4 @@ color_purple = (139, 0, 139)  # dark magenta
 color_dark_purple = (75, 0, 130)  # indigo
 color_cyan = (0, 255, 255)
 color_dark_cyan = (0, 150, 150)
+color_grey = (160, 160, 160)
